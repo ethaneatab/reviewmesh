@@ -8,7 +8,7 @@ import signal
 import threading
 from typing import Any
 
-from . import db, logs, sqsloop
+from . import db, logs, membership, sqsloop
 from .config import settings
 
 log = logs.setup("pipeline")
@@ -19,15 +19,27 @@ class Poison(Exception):
     """A message we can never handle; retries will run out and it lands in the DLQ."""
 
 
+# @learn:dispatch-partition
 def dispatch(body: dict[str, Any], meta: dict[str, Any]) -> None:
+    """Find the record's owner on the ring and move the message to that worker's queue."""
     if body.get("schema") != "intake.v1" or "record_id" not in body or "seq" not in body:
         raise Poison(f"not an intake.v1 message: {sorted(body)}")
     rid, seq = body["record_id"], int(body["seq"])
+    ring, epoch = membership.current_ring()
+    if not ring.nodes:
+        raise sqsloop.Retry(2, "no live workers in the ring")
+    p = ring.place(rid)
+    partition = {"owner": p.owner, "epoch": epoch, "ring": ring.kind, "members": list(ring.nodes),
+                 "key_hash": f"{p.hash:016x}", "angle": round(p.angle, 3), "vnode": p.vnode,
+                 "vnode_angle": round(p.vnode_angle, 3)}
+    sqsloop.send(settings().work_queue_prefix + p.owner, {**body, "partition": partition})
     with db.tx() as conn:
         db.event(conn, rid, seq, "SQS_RECEIVED", "dispatcher", {"message": body, **meta})
-        conn.execute("UPDATE intake.records SET status='QUEUED', updated_at=now() WHERE id=%s AND status IN ('STORED','RECEIVED')",
-                     (rid,))
-    log.info("dispatched", extra={"record_id": rid, "seq": seq, "stage": "SQS_RECEIVED"})
+        db.event(conn, rid, seq, "PARTITIONED", "dispatcher", partition)
+        conn.execute("UPDATE intake.records SET status='PARTITIONED', updated_at=now()"
+                     " WHERE id=%s AND status IN ('STORED','RECEIVED','QUEUED')", (rid,))
+    log.info("dispatched", extra={"record_id": rid, "seq": seq, "stage": "PARTITIONED", "worker": p.owner})
+# @learn:end dispatch-partition
 
 
 # @learn:reconciler

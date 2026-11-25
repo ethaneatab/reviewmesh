@@ -9,7 +9,9 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from . import auth, db, intake, logs
+import httpx
+
+from . import auth, db, intake, logs, membership, ring
 
 log = logs.setup("intake")
 
@@ -85,3 +87,50 @@ def read_record(record_id: str) -> dict[str, Any]:
 def _store() -> intake.StoreFn:
     from .storage import store_in_s3
     return store_in_s3
+
+
+# ---- ring: who owns what, and the scale-out / scale-in buttons ---------------------------------
+
+WORKER_PORTS = {"w1": 8892, "w2": 8893, "w3": 8894, "w4": 8895}
+
+
+def _record_ids(limit: int = 2000) -> list[str]:
+    with db.tx() as conn:
+        return [r["id"] for r in conn.execute("SELECT id FROM intake.records ORDER BY created_at DESC LIMIT %s", (limit,))]
+
+
+@app.get("/v1/ring")
+def ring_view(sample: int = 300) -> dict[str, Any]:
+    rg, epoch = membership.current_ring(max_age_s=0)
+    keys = _record_ids(sample)
+    placed = [rg.place(k) for k in keys] if rg.nodes else []
+    counts: dict[str, int] = {n: 0 for n in rg.nodes}
+    for p in placed:
+        counts[p.owner] += 1
+    return {"epoch": epoch, "kind": rg.kind, "vnodes": rg.vnodes, "members": membership.all_members(),
+            "live": list(rg.nodes), "points": rg.points(), "counts": counts,
+            "keys": [{"key": p.key, "angle": round(p.angle, 3), "owner": p.owner, "vnode": p.vnode} for p in placed],
+            "history": membership.history()[:10]}
+
+
+def _scale(worker: str, path: str) -> dict[str, Any]:
+    before = membership.live_members()
+    keys = _record_ids()
+    r = httpx.post(f"http://127.0.0.1:{WORKER_PORTS[worker]}{path}", timeout=5)
+    r.raise_for_status()
+    after = membership.live_members()
+    mv = ring.moved(keys, before, after) if before and after else []
+    return {"change": r.json(), "keys_checked": len(keys), "moved": len(mv),
+            "moved_fraction": round(len(mv) / len(keys), 4) if keys else None,
+            "expected_fraction": round(abs(len(after) - len(before)) / max(len(after), len(before)), 4),
+            "moved_sample": [{"key": k, "from": a, "to": b} for k, a, b in mv[:20]]}
+
+
+@app.post("/v1/ring/scale-out")
+def scale_out(worker: str = "w4") -> dict[str, Any]:
+    return _scale(worker, "/join")
+
+
+@app.post("/v1/ring/scale-in")
+def scale_in(worker: str = "w4") -> dict[str, Any]:
+    return _scale(worker, "/leave")
