@@ -18,5 +18,32 @@ services:
       test: ["CMD-SHELL", "pg_isready -U reviewmesh -d reviewmesh"]
       interval: 2s
       retries: 60
+  redis:
+    image: redis:7-alpine
+    ports: ["63590:6379"]
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "48mb"]
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+  localstack:
+    # 4.9 is pinned on purpose: newer images need an auth token.
+    image: localstack/localstack:4.9
+    ports: ["45690:4566"]
+    environment:
+      SERVICES: s3,sqs,lambda,logs,iam,sts
+      SQS_ENDPOINT_STRATEGY: path
+      # Lambda containers join this network so the handler reaches postgres:5432 and localstack:4566.
+      LAMBDA_DOCKER_NETWORK: reviewmesh_default
+      LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT: "60"
+      LAMBDA_KEEPALIVE_MS: "600000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    mem_limit: 900m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs localhost:4566/_localstack/health | grep -q lambda"]
+      interval: 3s
+      retries: 60
 volumes:
   pgdata: {}

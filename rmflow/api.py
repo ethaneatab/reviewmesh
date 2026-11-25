@@ -83,4 +83,5 @@ def read_record(record_id: str) -> dict[str, Any]:
 
 
 def _store() -> intake.StoreFn:
-    return intake._noop_store
+    from .storage import store_in_s3
+    return store_in_s3

@@ -8,7 +8,9 @@ COMPOSE=${COMPOSE:-/opt/homebrew/bin/docker-compose}
 PY=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
 [ -x .venv/bin/python ] || { $PY -m venv .venv && .venv/bin/pip install -q -r requirements.txt; }
 $COMPOSE -p reviewmesh up -d --wait
+.venv/bin/python -m rmflow.bootstrap          # schema, buckets, queues + DLQs, Lambda, S3 notification
 start_bg api .venv/bin/uvicorn rmflow.api:app --host 127.0.0.1 --port 8890
+start_bg pipeline .venv/bin/python -m rmflow.pipeline
 wait_http http://127.0.0.1:8890/v1/health 60
 echo
 echo "  intake API   http://127.0.0.1:8890/docs"
