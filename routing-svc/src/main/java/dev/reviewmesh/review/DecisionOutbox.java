@@ -47,7 +47,7 @@ public class DecisionOutbox {
         m.put("reviewer", reviewer);
         m.put("reason", reason);
         m.put("trace_id", t.traceId());
-        m.put("decided_at", OffsetDateTime.now().toString());
+        m.put("decided_at", OffsetDateTime.now(java.time.ZoneOffset.UTC).toString());
         db.update("INSERT INTO decision_outbox(record_id, payload) VALUES (?, CAST(? AS jsonb))", t.recordId(), write(m));
     }
 

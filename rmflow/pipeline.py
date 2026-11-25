@@ -8,7 +8,7 @@ import signal
 import threading
 from typing import Any
 
-from . import db, logs, membership, sqsloop
+from . import db, exporter, logs, membership, sqsloop
 from .config import settings
 
 log = logs.setup("pipeline")
@@ -79,6 +79,7 @@ def main() -> None:
     threads = [
         threading.Thread(target=sqsloop.consume, args=(settings().intake_queue, dispatch, stop), daemon=True),
         threading.Thread(target=_reconcile_loop, args=(stop,), daemon=True),
+        threading.Thread(target=sqsloop.consume, args=(settings().decision_queue, exporter.on_decision, stop), daemon=True),
     ]
     for t in threads:
         t.start()

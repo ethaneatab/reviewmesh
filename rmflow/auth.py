@@ -35,3 +35,12 @@ def principal(authorization: str | None = Header(default=None)) -> dict[str, Any
 def require(claims: dict[str, Any], *roles: str) -> None:
     if claims.get("role") not in roles:
         raise HTTPException(403, f"role {claims.get('role')} cannot do this")
+
+
+def ops_or_learn(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """Operator actions. In learn mode (local demo) the teaching page may trigger them without a login."""
+    if settings().learn_mode and not authorization:
+        return {"sub": "learn-mode", "role": "ops"}
+    claims = principal(authorization)
+    require(claims, "ops")
+    return claims

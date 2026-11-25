@@ -23,9 +23,13 @@ start_bg w1 .venv/bin/python -m rmflow.worker --id w1 --port 8892
 start_bg w2 .venv/bin/python -m rmflow.worker --id w2 --port 8893
 start_bg w3 .venv/bin/python -m rmflow.worker --id w3 --port 8894
 start_bg w4 .venv/bin/python -m rmflow.worker --id w4 --port 8895 --standby
+[ -d frontend/node_modules ] || (cd frontend && npm install --no-audit --no-fund)
+start_bg frontend node frontend/node_modules/vite/bin/vite.js frontend --port 5189 --strictPort --host 127.0.0.1
 wait_http http://127.0.0.1:8890/v1/health 60
 for p in 8892 8893 8894 8895; do wait_http http://127.0.0.1:$p/health 60; done
+wait_http http://127.0.0.1:5189 60
 echo
+echo "  frontend     http://127.0.0.1:5189   (queue, ring, rollout, ops, learn)"
 echo "  intake API   http://127.0.0.1:8890/docs"
 echo "  routing/Java http://127.0.0.1:8891  (demo logins rita/rita-demo, sam/sam-demo, olive/olive-demo)"
 echo "  workers      w1..w3 on 8892-8894, w4 (standby) on 8895"

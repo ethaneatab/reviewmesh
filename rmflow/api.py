@@ -6,13 +6,14 @@ from contextlib import asynccontextmanager
 from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import httpx
 
-from . import auth, db, intake, logs, membership, ring
-from .config import settings
+from . import auth, cache, db, exporter, intake, logs, membership, ring
+from .config import ROOT, settings
 
 log = logs.setup("intake")
 
@@ -24,6 +25,8 @@ async def _lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="reviewmesh intake", version="1.0.0", lifespan=_lifespan)
+# Teaching videos (docs/videos/<part>.mp4). A missing file is a plain 404; the page shows "视频待生成".
+app.mount("/videos", StaticFiles(directory=str(ROOT / "docs" / "videos"), check_dir=False), name="videos")
 
 
 class RecordIn(BaseModel):
@@ -83,6 +86,18 @@ def read_record(record_id: str) -> dict[str, Any]:
     if rec is None:
         raise HTTPException(404, "no such record")
     return rec
+
+
+@app.get("/v1/records/{record_id}/status")
+def record_status(record_id: str) -> dict[str, Any]:
+    """The hot path: clients poll this. Served from Redis for a second before touching Postgres."""
+    return cache.record_status(record_id)
+
+
+@app.post("/v1/exports")
+def export_batch(claims: dict[str, Any] = Depends(auth.principal)) -> dict[str, Any]:
+    auth.require(claims, "ops")
+    return exporter.batch_export()
 
 
 # @learn:timeline-merge
@@ -149,14 +164,15 @@ def _scale(worker: str, path: str) -> dict[str, Any]:
     return {"change": r.json(), "keys_checked": len(keys), "moved": len(mv),
             "moved_fraction": round(len(mv) / len(keys), 4) if keys else None,
             "expected_fraction": round(abs(len(after) - len(before)) / max(len(after), len(before)), 4),
-            "moved_sample": [{"key": k, "from": a, "to": b} for k, a, b in mv[:20]]}
+            "moved_sample": [{"key": k, "from": a, "to": b} for k, a, b in mv[:20]],
+            "moved_keys": [{"key": k, "from": a, "to": b} for k, a, b in mv]}
 
 
 @app.post("/v1/ring/scale-out")
-def scale_out(worker: str = "w4") -> dict[str, Any]:
+def scale_out(worker: str = "w4", _: Any = Depends(auth.ops_or_learn)) -> dict[str, Any]:
     return _scale(worker, "/join")
 
 
 @app.post("/v1/ring/scale-in")
-def scale_in(worker: str = "w4") -> dict[str, Any]:
+def scale_in(worker: str = "w4", _: Any = Depends(auth.ops_or_learn)) -> dict[str, Any]:
     return _scale(worker, "/leave")
