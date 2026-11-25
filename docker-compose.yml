@@ -1,0 +1,22 @@
+# reviewmesh local stack. Only state lives in containers; the services run on the host
+# (see scripts/demo.sh) so the shared colima VM stays small.
+name: reviewmesh
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports: ["54390:5432"]
+    environment:
+      POSTGRES_USER: reviewmesh
+      POSTGRES_PASSWORD: reviewmesh-dev   # local placeholder
+      POSTGRES_DB: reviewmesh
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=150", "-c", "work_mem=2MB"]
+    volumes:
+      - ./ops/postgres/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reviewmesh -d reviewmesh"]
+      interval: 2s
+      retries: 60
+volumes:
+  pgdata: {}

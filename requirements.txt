@@ -1,0 +1,15 @@
+boto3==1.44.11
+fastapi==0.165.0
+httpx==0.28.1
+pg8000==1.31.6
+prometheus_client==0.26.0
+psycopg[binary]==3.3.9
+psycopg-pool==3.3.3
+pyarrow==26.0.1
+PyJWT==2.15.1
+redis==8.2.0
+uvicorn==0.54.0
+# dev / checks
+mypy==2.4.1
+pytest==9.2.0
+ruff==0.17.6
