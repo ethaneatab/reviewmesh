@@ -1,0 +1,13 @@
+<configuration>
+  <!-- One JSON object per line; MDC carries record_id / trace_id / stage. -->
+  <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <fieldNames><timestamp>ts</timestamp><version>[ignore]</version><levelValue>[ignore]</levelValue></fieldNames>
+      <customFields>{"service":"routing-svc"}</customFields>
+    </encoder>
+  </appender>
+  <root level="INFO"><appender-ref ref="JSON"/></root>
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="com.zaxxer" level="WARN"/>
+  <logger name="org.flywaydb" level="INFO"/>
+</configuration>

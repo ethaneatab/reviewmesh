@@ -1,0 +1,18 @@
+{
+  "message": {
+    "schema": "handoff.v1",
+    "record_id": "rec_1c875595f6d03061",
+    "seq": 1,
+    "decision_id": "dec_be1c6bf99d6bbc6f",
+    "queue": "finance",
+    "priority": 3,
+    "engine": "v1",
+    "title": "Invoice 5520",
+    "doc_type": "invoice",
+    "s3_key": "inbox/rec_1c875595f6d03061/v1/invoice.pdf",
+    "trace_id": "79a4b1128652400fbaba7bc48f9fc9e9",
+    "worker": "w1",
+    "risk_score": 10,
+    "validation": {"passed": true, "issues": ["example issue"]}
+  }
+}

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 import httpx
 
 from . import auth, db, intake, logs, membership, ring
+from .config import settings
 
 log = logs.setup("intake")
 
@@ -82,6 +83,31 @@ def read_record(record_id: str) -> dict[str, Any]:
     if rec is None:
         raise HTTPException(404, "no such record")
     return rec
+
+
+# @learn:timeline-merge
+@app.get("/v1/records/{record_id}/timeline")
+def timeline(record_id: str) -> dict[str, Any]:
+    """One time-ordered list of every handoff state, from both sides (Python events + Java audit)."""
+    rec = intake.get_record(record_id)
+    if rec is None:
+        raise HTTPException(404, "no such record")
+    items = [{"at": e["at"].isoformat(), "source": "intake", "stage": e["stage"], "actor": e["actor"], "seq": e["seq"],
+              "detail": e["detail"]} for e in rec["events"]]
+    audit_ok = True
+    try:
+        r = httpx.get(f"{settings().routing_url}/v1/audit/records/{record_id}", timeout=2,
+                      headers={"Authorization": "Bearer " + auth.mint("intake-api", "service", 60)})
+        r.raise_for_status()
+        for a in r.json()["events"]:
+            items.append({"at": a["at"], "source": "audit", "stage": a["action"], "actor": a["actor"], "seq": a["seq"],
+                          "detail": {**a["detail"], "from": a["from_status"], "to": a["to_status"], "task_id": a["task_id"]}})
+    except httpx.HTTPError:
+        audit_ok = False          # the Java side is down: show what we have, and say so
+    items.sort(key=lambda i: i["at"])
+    return {"record_id": record_id, "status": rec["status"], "trace_id": rec["trace_id"], "audit_available": audit_ok,
+            "items": items}
+# @learn:end timeline-merge
 
 
 def _store() -> intake.StoreFn:

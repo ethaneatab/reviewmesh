@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${RM_JTEST_JDBC_URL:jdbc:postgresql://127.0.0.1:54390/reviewmesh_jtest?currentSchema=review}
+reviewmesh:
+  seed-demo: 1
+  sqs:
+    enabled: false

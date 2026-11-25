@@ -1,0 +1,14 @@
+{
+  "message": {
+    "schema": "decision.v1",
+    "record_id": "rec_1c875595f6d03061",
+    "seq": 1,
+    "task_id": 1,
+    "queue": "finance",
+    "outcome": "APPROVED",
+    "reviewer": "rita",
+    "reason": "amounts match the PO",
+    "trace_id": "79a4b1128652400fbaba7bc48f9fc9e9",
+    "decided_at": "2026-11-25T19:40:02.118Z"
+  }
+}

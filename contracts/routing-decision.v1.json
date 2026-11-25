@@ -1,0 +1,21 @@
+{
+  "request": {
+    "record_id": "rec_1c875595f6d03061",
+    "seq": 1,
+    "doc_type": "invoice",
+    "title": "Invoice 5520",
+    "risk_score": 10,
+    "validation": {"passed": true, "issues": ["example issue"]},
+    "attempt": 1,
+    "trace_id": "79a4b1128652400fbaba7bc48f9fc9e9"
+  },
+  "response": {
+    "decision_id": "dec_be1c6bf99d6bbc6f",
+    "record_id": "rec_1c875595f6d03061",
+    "seq": 1,
+    "queue": "finance",
+    "priority": 3,
+    "engine": "v1",
+    "reason": "v1 table: invoice -> finance, risk 10"
+  }
+}

@@ -1,0 +1,36 @@
+server:
+  port: 8891
+spring:
+  application:
+    name: reviewmesh-routing
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  datasource:
+    url: ${RM_JDBC_URL:jdbc:postgresql://127.0.0.1:54390/reviewmesh?currentSchema=review}
+    username: reviewmesh
+    password: ${RM_PG_PASSWORD:reviewmesh-dev}
+    hikari:
+      maximum-pool-size: 8
+  flyway:
+    schemas: review
+    create-schemas: true
+    # Which schema version to migrate to. The contract step is applied on purpose, not by default.
+    target: ${RM_FLYWAY_TARGET:latest}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+reviewmesh:
+  jwt-secret: ${RM_JWT_SECRET:dev-only-jwt-signing-key-not-for-production-use}
+  seed-demo: ${RM_SEED_DEMO:0}
+  sqs:
+    enabled: ${RM_SQS_ENABLED:true}
+    endpoint: ${RM_AWS_ENDPOINT:http://127.0.0.1:45690}
+    handoff-queue: ${RM_HANDOFF_QUEUE:rm-handoff}
+    decision-queue: ${RM_DECISION_QUEUE:rm-decisions}
