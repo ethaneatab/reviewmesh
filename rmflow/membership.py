@@ -5,7 +5,7 @@ import json
 import threading
 import time
 from functools import cache
-from typing import Any
+from typing import Any, cast
 
 import redis
 
@@ -47,7 +47,7 @@ def set_active(worker: str, active: bool, reason: str) -> dict[str, Any]:
 
 
 def all_members() -> dict[str, dict[str, Any]]:
-    raw = r().hgetall(MEMBERS)
+    raw = cast("dict[str, str]", r().hgetall(MEMBERS))  # decode_responses=True: str, not bytes
     out = {}
     for w, v in raw.items():
         info = json.loads(v)
