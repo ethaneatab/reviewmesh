@@ -66,9 +66,12 @@ test('scale-out branch shows the moved keys', async ({ page }) => {
 
 test('rollout branch rolls back automatically', async ({ page }) => {
   await page.goto('/learn/rollout')
-  await page.getByTestId('branch-reset').click()
-  await page.getByTestId('branch-start').click()
-  await page.getByTestId('branch-advance').click()
+  // The buttons fire their requests without waiting for each other, so wait for
+  // each answer before the next click: on a slow CI runner a reset that was
+  // answered after start/advance put the rollout back to 0%.
+  for (const step of ['reset', 'start', 'advance']) {
+    await Promise.all([page.waitForResponse((r) => r.url().includes(`/v1/rollout/${step}`)), page.getByTestId(`branch-${step}`).click()])
+  }
   await expect(page.getByTestId('branch-percent')).toHaveText('10%')
   await page.getByTestId('branch-traffic').click()
   await expect.poll(async () => Number(await page.getByTestId('branch-samples').innerText()), { timeout: 15_000 }).toBeGreaterThan(5)
