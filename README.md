@@ -4,7 +4,7 @@
 
 ![learn mode preview](docs/learn-preview.gif)
 
-完整讲解视频：[Release learn-video](../../releases/tag/learn-video) · 分章教程：[docs/tutorial/](docs/tutorial/) · 面试题：[docs/interview.md](docs/interview.md) · 日常问题：[docs/problems.md](docs/problems.md)
+讲解视频（每个阶段一段，旁白为本地 TTS 合成）：[docs/videos/](docs/videos/README.md) · 分章教程：[docs/tutorial/](docs/tutorial/) · 面试题：[docs/interview.md](docs/interview.md) · 日常问题：[docs/problems.md](docs/problems.md)
 
 ## 架构
 
