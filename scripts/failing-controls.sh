@@ -4,7 +4,7 @@
 # Needs Postgres, Redis and LocalStack up (docker-compose -p reviewmesh up -d); not the services.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME=${JAVA_HOME_21:-/opt/homebrew/opt/openjdk@21}
+export JAVA_HOME=${JAVA_HOME_21:-${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}}  # CI: setup-java sets JAVA_HOME
 OUT=docs/results/failing-controls.txt
 : > "$OUT"
 status=0
@@ -28,7 +28,7 @@ py_case no_lock        tests/test_step03_order_and_lock.py::test_two_owners_duri
 
 for mode in off on; do
   if [ $mode = off ]; then prop="-Drm.lab.sabotage=no_rollback"; label="protection OFF (no_rollback)"; else prop=""; label="protection ON"; fi
-  res=$(cd routing-svc && /opt/homebrew/bin/mvn -q test -Dtest='RolloutPolicyTest#errorRegressionRollsBackToZeroWithinFiveSeconds' $prop 2>&1)
+  res=$(cd routing-svc && ${MVN:-mvn} -q test -Dtest='RolloutPolicyTest#errorRegressionRollsBackToZeroWithinFiveSeconds' $prop 2>&1)
   rc=$?
   { echo "### RolloutPolicyTest.errorRegressionRollsBackToZeroWithinFiveSeconds — $label";
     echo "$res" | grep -E "fault at|never rolled back|Tests run:" | head -3; [ $rc -eq 0 ] && echo "BUILD SUCCESS"; echo; } >> "$OUT"

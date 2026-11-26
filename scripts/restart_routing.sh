@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/lib.sh
-export JAVA_HOME=${JAVA_HOME_21:-/opt/homebrew/opt/openjdk@21}
+export JAVA_HOME=${JAVA_HOME_21:-${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}}  # CI: setup-java sets JAVA_HOME
 if [ -f .runtime/routing.pid ]; then
   pid=$(cat .runtime/routing.pid)
   kill "$pid" 2>/dev/null || true

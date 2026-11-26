@@ -11,7 +11,7 @@ PY=${PYTHON:-/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11}
 MVN=${MVN:-/opt/homebrew/bin/mvn}
 [ -x "$MVN" ] || MVN=mvn
 [ -x .venv/bin/python ] || { $PY -m venv .venv && .venv/bin/pip install -q -r requirements.txt; }
-export JAVA_HOME=${JAVA_HOME_21:-/opt/homebrew/opt/openjdk@21}
+export JAVA_HOME=${JAVA_HOME_21:-${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}}  # CI: setup-java sets JAVA_HOME
 [ -d "$JAVA_HOME" ] || JAVA_HOME=${JAVA_HOME_FALLBACK:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}
 JAR=routing-svc/target/routing-svc-1.0.0.jar
 if [ ! -f "$JAR" ] || [ -n "$(find routing-svc/src routing-svc/pom.xml -newer "$JAR" -type f | head -1)" ]; then

@@ -30,7 +30,6 @@ jobs:
     needs: checks
     env:
       COMPOSE: docker compose
-      JAVA_HOME_21: /opt/java21
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
