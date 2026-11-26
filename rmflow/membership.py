@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import threading
 import time
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 import redis
@@ -18,7 +18,7 @@ HISTORY = "rm:ring:history"
 HEARTBEAT_TTL_S = 6
 
 
-@lru_cache(maxsize=None)
+@cache
 def r() -> redis.Redis:
     return redis.Redis.from_url(settings().redis_url, decode_responses=True)
 

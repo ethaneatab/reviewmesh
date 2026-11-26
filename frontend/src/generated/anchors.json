@@ -1,0 +1,197 @@
+{
+  "audit-append": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/audit/AuditRepository.java",
+    "start": 22,
+    "end": 31
+  },
+  "backfill": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/migration/MigrationService.java",
+    "start": 40,
+    "end": 56
+  },
+  "claim": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/ReviewService.java",
+    "start": 51,
+    "end": 63
+  },
+  "decision-outbox": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/DecisionOutbox.java",
+    "start": 38,
+    "end": 74
+  },
+  "dispatch-partition": {
+    "path": "rmflow/pipeline.py",
+    "start": 23,
+    "end": 41
+  },
+  "export-decision": {
+    "path": "rmflow/exporter.py",
+    "start": 29,
+    "end": 46
+  },
+  "fenced-commit": {
+    "path": "rmflow/worker.py",
+    "start": 67,
+    "end": 74
+  },
+  "flag-choose": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/routing/RoutingService.java",
+    "start": 42,
+    "end": 60
+  },
+  "handoff-intake": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/ReviewService.java",
+    "start": 24,
+    "end": 43
+  },
+  "idempotency-guard": {
+    "path": "rmflow/intake.py",
+    "start": 51,
+    "end": 71
+  },
+  "java-contract-test": {
+    "path": "routing-svc/src/test/java/dev/reviewmesh/ContractTest.java",
+    "start": 39,
+    "end": 47
+  },
+  "lambda-deploy": {
+    "path": "rmflow/bootstrap.py",
+    "start": 108,
+    "end": 135
+  },
+  "lambda-handler": {
+    "path": "lambdas/s3_intake/handler.py",
+    "start": 34,
+    "end": 66
+  },
+  "ops-alerts": {
+    "path": "rmflow/ops.py",
+    "start": 30,
+    "end": 68
+  },
+  "order-gate": {
+    "path": "rmflow/worker.py",
+    "start": 52,
+    "end": 63
+  },
+  "phase-sql": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
+    "start": 40,
+    "end": 71
+  },
+  "queue-query": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
+    "start": 123,
+    "end": 130
+  },
+  "reconciler": {
+    "path": "rmflow/pipeline.py",
+    "start": 46,
+    "end": 60
+  },
+  "record-lock": {
+    "path": "rmflow/locks.py",
+    "start": 17,
+    "end": 26
+  },
+  "ring-lookup": {
+    "path": "rmflow/ring.py",
+    "start": 35,
+    "end": 52
+  },
+  "rollback-decision": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/rollout/RolloutPolicy.java",
+    "start": 36,
+    "end": 55
+  },
+  "rollout-tick": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/rollout/RolloutService.java",
+    "start": 67,
+    "end": 86
+  },
+  "routing-endpoint": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/routing/RoutingController.java",
+    "start": 22,
+    "end": 37
+  },
+  "routing-retry": {
+    "path": "rmflow/routing_client.py",
+    "start": 38,
+    "end": 61
+  },
+  "routing-v1": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/routing/RuleEngineV1.java",
+    "start": 13,
+    "end": 20
+  },
+  "routing-v2": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/routing/RuleEngineV2.java",
+    "start": 39,
+    "end": 48
+  },
+  "run-steps": {
+    "path": "rmflow/process.py",
+    "start": 25,
+    "end": 45
+  },
+  "s3-store": {
+    "path": "rmflow/storage.py",
+    "start": 22,
+    "end": 29
+  },
+  "status-cache": {
+    "path": "rmflow/cache.py",
+    "start": 16,
+    "end": 27
+  },
+  "task-upsert": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
+    "start": 96,
+    "end": 111
+  },
+  "test-expand-contract": {
+    "path": "routing-svc/src/test/java/dev/reviewmesh/MigrationCompatTest.java",
+    "start": 70,
+    "end": 122
+  },
+  "test-explain": {
+    "path": "tests/test_step08_query_paths.py",
+    "start": 22,
+    "end": 29
+  },
+  "test-order": {
+    "path": "tests/test_step03_order_and_lock.py",
+    "start": 39,
+    "end": 54
+  },
+  "test-retry": {
+    "path": "tests/test_step04_validate_route.py",
+    "start": 47,
+    "end": 62
+  },
+  "test-ring-migration": {
+    "path": "tests/test_step03_ring.py",
+    "start": 12,
+    "end": 19
+  },
+  "test-rollback": {
+    "path": "routing-svc/src/test/java/dev/reviewmesh/RolloutPolicyTest.java",
+    "start": 45,
+    "end": 55
+  },
+  "timeline-merge": {
+    "path": "rmflow/api.py",
+    "start": 119,
+    "end": 139
+  },
+  "validate": {
+    "path": "rmflow/validation.py",
+    "start": 12,
+    "end": 41
+  },
+  "worker-handle": {
+    "path": "rmflow/worker.py",
+    "start": 99,
+    "end": 132
+  }
+}

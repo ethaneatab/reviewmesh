@@ -53,7 +53,9 @@ class Worker:
         """apply = this is the next step; duplicate = already done; wait = an earlier seq is missing."""
         with db.tx() as conn:
             conn.execute("INSERT INTO intake.workflow_state(record_id) VALUES (%s) ON CONFLICT DO NOTHING", (rid,))
-            last = conn.execute("SELECT last_seq FROM intake.workflow_state WHERE record_id=%s", (rid,)).fetchone()["last_seq"]
+            row = conn.execute("SELECT last_seq FROM intake.workflow_state WHERE record_id=%s", (rid,)).fetchone()
+            assert row is not None
+            last = row["last_seq"]
         if lab.sabotaged("no_order_gate"):
             return "apply"
         if seq <= last:

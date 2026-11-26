@@ -54,7 +54,7 @@ def batch_export() -> dict[str, Any]:
             "SELECT e.record_id, e.seq, r.title, r.doc_type, e.detail->>'outcome' AS outcome, e.at AS exported_at"
             " FROM intake.record_events e JOIN intake.records r ON r.id = e.record_id"
             " WHERE e.stage = 'EXPORTED' ORDER BY e.id").fetchall()
-    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     table = pa.Table.from_pylist([{**r, "exported_at": r["exported_at"].isoformat()} for r in rows],
                                  schema=pa.schema([("record_id", pa.string()), ("seq", pa.int32()), ("title", pa.string()),
                                                    ("doc_type", pa.string()), ("outcome", pa.string()),

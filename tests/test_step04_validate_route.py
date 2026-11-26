@@ -96,6 +96,7 @@ def test_breaking_change_detector_flags_removed_and_retyped_fields():
 @pytest.mark.live
 def test_live_record_becomes_an_open_task_in_the_java_queue(live):
     import base64
+
     from rmflow import auth
     pdf = base64.b64encode(b"%PDF-1.4\n% live\n").decode()
     r = httpx.post(live.api + "/v1/records", headers={"Authorization": f"Bearer {live.token}", "Idempotency-Key": uuid.uuid4().hex},

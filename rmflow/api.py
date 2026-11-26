@@ -5,14 +5,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any, Literal
 
+import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-import httpx
-
-from . import auth, cache, db, exporter, intake, logs, membership, ring, traffic
+from . import auth, cache, db, exporter, intake, logs, membership, ops, ring, traffic
 from .config import ROOT, settings
 
 log = logs.setup("intake")
@@ -25,6 +24,9 @@ async def _lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="reviewmesh intake", version="1.0.0", lifespan=_lifespan)
+from . import learn  # noqa: E402
+
+app.include_router(learn.router)
 # Teaching videos (docs/videos/<part>.mp4). A missing file is a plain 404; the page shows "视频待生成".
 app.mount("/videos", StaticFiles(directory=str(ROOT / "docs" / "videos"), check_dir=False), name="videos")
 
@@ -49,6 +51,19 @@ def _respond(out: intake.Outcome) -> JSONResponse:
     return JSONResponse(out.body, status_code=out.status, headers=headers)
 
 
+@app.get("/v1/ops/overview")
+def ops_overview() -> dict[str, Any]:
+    return ops.overview()
+
+
+@app.get("/metrics")
+def metrics() -> Any:
+    from fastapi.responses import PlainTextResponse
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+    ops.overview()          # refresh the gauges on scrape
+    return PlainTextResponse(generate_latest().decode(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.get("/v1/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -61,8 +76,8 @@ def create_record(body: RecordIn, claims: dict[str, Any] = Depends(auth.principa
     key = _key(idempotency_key)
     try:
         out = intake.submit(claims["sub"], key, body.model_dump(exclude_none=True), store=_store())
-    except intake.KeyReuse:
-        raise HTTPException(422, "Idempotency-Key was already used with a different request body")
+    except intake.KeyReuse as exc:
+        raise HTTPException(422, "Idempotency-Key was already used with a different request body") from exc
     log.info("record submitted" if not out.replayed else "idempotent replay",
              extra={"record_id": out.body.get("record_id"), "stage": "SUBMITTED"})
     return _respond(out)
@@ -75,8 +90,8 @@ def revise_record(record_id: str, body: RecordIn, claims: dict[str, Any] = Depen
     key = _key(idempotency_key)
     try:
         out = intake.revise(claims["sub"], record_id, key, body.model_dump(exclude_none=True), store=_store())
-    except intake.KeyReuse:
-        raise HTTPException(422, "Idempotency-Key was already used with a different request body")
+    except intake.KeyReuse as exc:
+        raise HTTPException(422, "Idempotency-Key was already used with a different request body") from exc
     return _respond(out)
 
 

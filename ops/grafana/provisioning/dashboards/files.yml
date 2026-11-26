@@ -1,0 +1,3 @@
+apiVersion: 1
+providers:
+  - {name: reviewmesh, folder: reviewmesh, type: file, options: {path: /var/lib/grafana/dashboards}}

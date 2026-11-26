@@ -1,9 +1,10 @@
 """Postgres access (psycopg 3) and the tiny migration runner for the intake schema."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import psycopg
 from psycopg.rows import dict_row
@@ -30,7 +31,7 @@ def tx(dsn: str | None = None) -> Iterator[psycopg.Connection[dict[str, Any]]]:
     """One transaction; commits on success, rolls back on any exception."""
     with pool(dsn).connection() as conn:
         with conn.transaction():
-            yield conn
+            yield conn  # type: ignore[misc]
 
 
 def jsonb(v: Any) -> Jsonb:

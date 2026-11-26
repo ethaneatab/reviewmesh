@@ -1,0 +1,23 @@
+groups:
+  - name: reviewmesh
+    rules:
+      - alert: DeadLetters
+        expr: max by (queue) (reviewmesh_queue_depth{queue=~".*dlq"}) > 0
+        for: 1m
+        labels: {severity: page}
+        annotations: {summary: "{{ $labels.queue }} has parked messages; inspect and redrive"}
+      - alert: StuckRecords
+        expr: reviewmesh_records_stuck > 0
+        for: 2m
+        labels: {severity: warn}
+        annotations: {summary: "records stay STORED; the S3 -> Lambda path may be dropping events"}
+      - alert: WorkerDown
+        expr: min by (worker) (reviewmesh_worker_up) == 0
+        for: 30s
+        labels: {severity: page}
+        annotations: {summary: "{{ $labels.worker }} stopped heartbeating; its keys move to neighbours"}
+      - alert: IntakeBacklog
+        expr: reviewmesh_queue_depth{queue="rm-intake"} > 100
+        for: 5m
+        labels: {severity: warn}
+        annotations: {summary: "dispatcher is not keeping up with the intake queue"}

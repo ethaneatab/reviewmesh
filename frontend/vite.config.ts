@@ -21,6 +21,8 @@ export default defineConfig({
   server: {
     port: 5189,
     strictPort: true,
+    // docs/interview.md and docs/problems.md are imported as text from outside the frontend folder.
+    fs: { allow: ['..'] },
     proxy: {
       '/api/intake': { target: 'http://127.0.0.1:8890', rewrite: (p) => p.replace(/^\/api\/intake/, '') },
       '/api/review': { target: 'http://127.0.0.1:8891', rewrite: (p) => p.replace(/^\/api\/review/, '') },

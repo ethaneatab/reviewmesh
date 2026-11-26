@@ -99,3 +99,16 @@ table.list tr:hover td { background: #f8f9fe; }
   .grid2 { grid-template-columns: 1fr; }
   main { padding: 16px; }
 }
+
+.stages { list-style: none; padding: 0; margin: 0; }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; opacity: .55; transition: opacity .3s, border-color .3s; }
+.stage.done { opacity: 1; border-color: #a5b4fc; box-shadow: inset 4px 0 0 var(--primary); }
+.stage-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stage-no { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--line); font-size: 12px; font-weight: 700; }
+.stage.done .stage-no { background: var(--primary); color: #fff; }
+.key-value { font-family: var(--mono); font-size: 12.5px; background: var(--primary-soft); color: var(--primary); padding: 1px 6px; border-radius: 4px; }
+.when { color: var(--muted); font-size: 12px; }
+details.qa summary { cursor: pointer; font-weight: 600; }
+details.qa[open] summary { margin-bottom: 6px; }
+.md p { margin: 6px 0; }
+.md ul { margin: 4px 0; padding-left: 20px; }

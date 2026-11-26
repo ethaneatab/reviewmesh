@@ -5,8 +5,9 @@ import hashlib
 import json
 import secrets
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import psycopg
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 import boto3
@@ -14,12 +14,12 @@ os.environ.setdefault("AWS_ACCESS_KEY_ID", "test")       # LocalStack accepts an
 os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
 
 
-@lru_cache(maxsize=None)
+@cache
 def client(name: str) -> Any:
     s = settings()
     cfg = Config(retries={"max_attempts": 3, "mode": "standard"}, s3={"addressing_style": "path"},
                  connect_timeout=3, read_timeout=25)
-    return boto3.client(name, endpoint_url=s.aws_endpoint or None, region_name=s.aws_region, config=cfg)
+    return boto3.client(name, endpoint_url=s.aws_endpoint or None, region_name=s.aws_region, config=cfg)  # type: ignore[call-overload]
 
 
 def s3() -> Any:
@@ -30,6 +30,6 @@ def sqs() -> Any:
     return client("sqs")
 
 
-@lru_cache(maxsize=None)
+@cache
 def queue_url(name: str) -> str:
     return str(sqs().get_queue_url(QueueName=name)["QueueUrl"])

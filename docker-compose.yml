@@ -45,5 +45,26 @@ services:
       test: ["CMD-SHELL", "curl -fs localhost:4566/_localstack/health | grep -q lambda"]
       interval: 3s
       retries: 60
+  # Optional, not started by demo.sh: docker-compose -p reviewmesh --profile obs up -d
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: ["obs"]
+    ports: ["8896:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    mem_limit: 128m
+  grafana:
+    image: grafana/grafana:12.2.1
+    profiles: ["obs"]
+    ports: ["8897:3000"]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    mem_limit: 192m
 volumes:
   pgdata: {}
