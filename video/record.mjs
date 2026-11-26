@@ -151,6 +151,13 @@ async function act(action) {
       }
       throw new Error('rollout traffic never produced samples')
     case 'click_rollback':
+      // With real narration the segments before this one take ~30 s, and a
+      // clean rollout promotes itself to COMPLETE by then; a fault after that
+      // has nothing to roll back. Start the ramp again if it moved on.
+      if (!/RAMPING/.test(await byId('branch-rollout-status').innerText())) {
+        await act('rollout_prepare')
+        await act('wait_samples')
+      }
       await byId('branch-fault').click()
       await page.locator('[data-testid=branch-rollout-status]', { hasText: 'ROLLED_BACK' }).waitFor({ timeout: 20_000 })
       return
