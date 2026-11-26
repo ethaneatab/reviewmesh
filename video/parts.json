@@ -1,0 +1,10 @@
+[
+  {"part": "p1-intake", "title": "收件和幂等键", "stage": "submit", "chapter": "docs/tutorial/01-intake-idempotency.md"},
+  {"part": "p2-s3-lambda", "title": "S3 触发 Lambda，消息进 SQS", "stage": "s3, lambda, sqs", "chapter": "docs/tutorial/02-s3-lambda-sqs.md"},
+  {"part": "p3-partition", "title": "一致性哈希分区与扩容", "stage": "partition（支线：扩容）", "chapter": "docs/tutorial/03-consistent-hashing-workers.md"},
+  {"part": "p4-route", "title": "校验与 Java 路由", "stage": "validate, route", "chapter": "docs/tutorial/04-validation-java-routing.md"},
+  {"part": "p5-review", "title": "人工审核、审计与导出", "stage": "claim, audit, export", "chapter": "docs/tutorial/05-reviewer-queue-export.md"},
+  {"part": "p6-migration", "title": "expand / contract 表迁移", "stage": "支线：表结构迁移", "chapter": "docs/tutorial/06-expand-contract-migration.md"},
+  {"part": "p7-rollout", "title": "分阶段放量与自动回滚", "stage": "支线：灰度与回滚", "chapter": "docs/tutorial/07-staged-rollout-auto-rollback.md"},
+  {"part": "p8-observe", "title": "可观测、面试题与日常问题", "stage": "运维页、面试题、日常问题", "chapter": "docs/tutorial/08-observability-learn-mode.md"}
+]

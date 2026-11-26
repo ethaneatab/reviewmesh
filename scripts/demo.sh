@@ -5,15 +5,21 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/lib.sh
 COMPOSE=${COMPOSE:-/opt/homebrew/bin/docker-compose}
-PY=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+[ -x "${COMPOSE%% *}" ] || COMPOSE="docker compose"
+PY=${PYTHON:-/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11}
+[ -x "$PY" ] || PY=python3.11
+MVN=${MVN:-/opt/homebrew/bin/mvn}
+[ -x "$MVN" ] || MVN=mvn
 [ -x .venv/bin/python ] || { $PY -m venv .venv && .venv/bin/pip install -q -r requirements.txt; }
 export JAVA_HOME=${JAVA_HOME_21:-/opt/homebrew/opt/openjdk@21}
+[ -d "$JAVA_HOME" ] || JAVA_HOME=${JAVA_HOME_FALLBACK:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}
 JAR=routing-svc/target/routing-svc-1.0.0.jar
 if [ ! -f "$JAR" ] || [ -n "$(find routing-svc/src routing-svc/pom.xml -newer "$JAR" -type f | head -1)" ]; then
-  (cd routing-svc && /opt/homebrew/bin/mvn -q -DskipTests package)
+  (cd routing-svc && $MVN -q -DskipTests package)
 fi
 $COMPOSE -p reviewmesh up -d --wait
 .venv/bin/python -m rmflow.bootstrap          # schema, buckets, queues + DLQs, Lambda, S3 notification
+.venv/bin/python scripts/seed_records.py 600  # metadata-only keys for the ring page (never processed)
 RM_SEED_DEMO=${RM_SEED_DEMO:-1} start_bg routing "$JAVA_HOME/bin/java" -Xmx256m -XX:+UseSerialGC -jar "$JAR"
 wait_http http://127.0.0.1:8891/actuator/health 120
 start_bg api .venv/bin/uvicorn rmflow.api:app --host 127.0.0.1 --port 8890

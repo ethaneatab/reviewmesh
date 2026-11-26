@@ -1,0 +1,50 @@
+[
+  {"id": "s01", "part": "p1-intake", "action": "goto:/learn", "highlight": "[data-testid=learn-submit]", "text": "这一段讲收件。我们先看这个按钮，提交样例。点下去，后端会真的提交一张发票，而且用同一个幂等键再发一次，模拟客户端超时重试。"},
+  {"id": "s02", "part": "p1-intake", "action": "submit", "highlight": "[data-testid=kv-submit]", "text": "第一步亮了。看这一行，第二次请求拿到的是两百，而且标着重放。说明重试没有建出第二条记录，而是原样拿回了第一次的结果。"},
+  {"id": "s03", "part": "p1-intake", "action": "open:submit", "highlight": "[data-testid=data-submit]", "text": "点开看原始数据。两次响应里的记录号完全一样。为什么能做到？因为幂等键是先插进数据库的，主键冲突的那一个只能等着，然后重放。"},
+  {"id": "s04", "part": "p1-intake", "action": "show_src:submit", "highlight": "[data-testid=src-submit]", "text": "旁边是看源码的链接，指向那段先占键再干活的代码，行号是脚本扫出来的，不是手写的。这一段就到这里，下一段看文件去了哪。"},
+
+  {"id": "s05", "part": "p2-s3-lambda", "action": "wait_stage:s3", "highlight": "[data-testid=kv-s3]", "text": "这一段讲文件怎么进入流水线。先看这里，文件已经写进对象存储，键里带着记录号和版本号。它是在收件事务提交之前最后一步写进去的。"},
+  {"id": "s06", "part": "p2-s3-lambda", "action": "wait_stage:lambda", "highlight": "[data-testid=kv-lambda]", "text": "文件一落地，对象存储的事件就触发了 Lambda。这里能看到这一次调用的请求号，还有它从文件头猜出来的类型，是 pdf。"},
+  {"id": "s07", "part": "p2-s3-lambda", "action": "open:lambda", "highlight": "[data-testid=data-lambda]", "text": "点开看 Lambda 发出的消息。它算了文件的哈希，后面的校验会拿它和收件时的哈希比。如果 Lambda 没来，二十秒后会有补偿任务直接补发，记录不会卡住。"},
+  {"id": "s08", "part": "p2-s3-lambda", "action": "wait_stage:sqs", "highlight": "[data-testid=kv-sqs]", "text": "消息进了队列，分发器收到了。这里写着是第一次收到。如果处理失败，消息会按指数退避重新出现，第四次还失败就进死信队列。"},
+
+  {"id": "s09", "part": "p3-partition", "action": "wait_stage:partition", "highlight": "[data-testid=kv-partition]", "text": "这一段讲分区。看这一行，记录落在环上某个角度，顺时针碰到的第一个虚拟节点属于哪个 worker，这条记录就归谁。"},
+  {"id": "s10", "part": "p3-partition", "action": "open:partition", "highlight": "[data-testid=data-partition]", "text": "点开看细节。除了主人是谁，还有拿锁时得到的令牌。这个令牌每次递增，写库时要比库里存的大才算数，过期的旧主人写不进去。"},
+  {"id": "s11", "part": "p3-partition", "action": "goto:/learn/scale", "highlight": "[data-testid=branch-scale-out]", "text": "那扩容的时候会搬走多少记录？我们去支线看。先框住这个按钮，让第四台 worker 加入环。"},
+  {"id": "s12", "part": "p3-partition", "action": "click:branch-scale-out", "highlight": "[data-testid=branch-fraction]", "shape": "circle", "text": "看这个比例，大约四分之一多一点。理想值是四分之一。如果用取模，要搬走四分之三。搬得越少，交接时出错的机会越少。"},
+  {"id": "s13", "part": "p3-partition", "action": "noop", "highlight": "[data-testid=branch-ring]", "text": "环上往里缩、变大的点，就是换了主人的记录，颜色全是新来的那台。说明一致性哈希只把新节点前面那一小段弧交给它，老节点之间不互相搬。"},
+  {"id": "s14", "part": "p3-partition", "action": "click:branch-scale-in", "highlight": "[data-testid=branch-src-ring]", "text": "把它缩回去，环恢复原样。源码在这个链接里。这一段讲完了，回到主线看校验。"},
+
+  {"id": "s15", "part": "p4-route", "action": "back_main", "highlight": "[data-testid=kv-validate]", "text": "这一段讲校验和路由。回到刚才那条记录，校验这一步已经亮了。看这里，通过了，风险分是七十，因为金额超过了一万。"},
+  {"id": "s16", "part": "p4-route", "action": "open:validate", "highlight": "[data-testid=data-validate]", "text": "点开看每一项检查。文件类型、大小、哈希是否一致、必填字段、金额格式，都列出来了。校验不抛异常，没过也照样路由，只是进修正队列让人看。"},
+  {"id": "s17", "part": "p4-route", "action": "wait_stage:route", "highlight": "[data-testid=kv-route]", "text": "路由是同步调用 Java 服务拿到的。看这一行，用的是第一版规则，进了财务队列，优先级是高。为什么同步？因为不知道去哪个队列，worker 就没法往下走。"},
+  {"id": "s18", "part": "p4-route", "action": "open:route", "highlight": "[data-testid=data-route]", "text": "点开看，尝试了一次就成功了，没有走降级。如果 Java 挂了，会有四次有上限的重试，最后进人工分拣队列，记录照样能到人手里。"},
+  {"id": "s19", "part": "p4-route", "action": "show_src:route", "highlight": "[data-testid=src-route]", "text": "这是路由规则的源码链接。到这里，任务已经通过队列交给了 Java 的审核侧。下一段看人怎么接手。"},
+
+  {"id": "s20", "part": "p5-review", "action": "noop", "highlight": "[data-testid=learn-claim]", "text": "这一段讲人工审核。先看这个按钮，以审核员的身份认领这条任务。"},
+  {"id": "s21", "part": "p5-review", "action": "click_wait:learn-claim:claim", "highlight": "[data-testid=kv-claim]", "text": "认领成功，状态从待处理变成已认领。认领只有一条带条件的更新语句，两个人同时点，只有一个会成功，另一个拿到冲突。"},
+  {"id": "s22", "part": "p5-review", "action": "noop", "highlight": "[data-testid=learn-approve]", "text": "看完了，点通过。"},
+  {"id": "s23", "part": "p5-review", "action": "click_wait:learn-approve:audit", "highlight": "[data-testid=kv-audit]", "text": "审计这一步亮了，一共几条记录。审计表只追加，代码里没有任何改它、删它的地方。"},
+  {"id": "s24", "part": "p5-review", "action": "open:audit", "highlight": "[data-testid=data-audit]", "text": "点开看完整的轨迹：路由、建任务、认领、通过，每一条都有从什么状态到什么状态，还有是谁做的。"},
+  {"id": "s25", "part": "p5-review", "action": "wait_stage:export", "highlight": "[data-testid=kv-export]", "text": "最后一步，结论导出到了对象存储。结论和要发的消息在同一个事务里写进发件箱，再由轮询发出去，所以进程中途崩了也不会丢。"},
+  {"id": "s26", "part": "p5-review", "action": "open:export", "highlight": "[data-testid=data-export]", "text": "点开看，就是一行表格，下游可以直接读。十个阶段全部亮了，每一步都是后端真的有了那一行数据才亮的。"},
+
+  {"id": "s27", "part": "p6-migration", "action": "goto:/learn/migration", "highlight": "[data-testid=migr-phase]", "text": "这一段讲不停机改表。看这里，当前版本处在只写新列的阶段。我们把审核员从一个文本列，改成了指向审核员表的外键。"},
+  {"id": "s28", "part": "p6-migration", "action": "noop", "highlight": "[data-testid=migr-columns]", "text": "看任务表现在的列，旧的文本列已经没了，只剩新的外键列。可是老客户端读到的审核员名字还在，是从审核员表拼回来的。"},
+  {"id": "s29", "part": "p6-migration", "action": "noop", "highlight": "[data-testid=migr-history]", "text": "再看迁移历史，三步：建表，扩展，收缩。扩展只加不改；中间先双写，再回填，再切换读取；收缩之前有守卫，没回填完就拒绝删列。"},
+  {"id": "s30", "part": "p6-migration", "action": "show_src:migr-src", "highlight": "[data-testid=migr-src]", "text": "这是按阶段拼接语句的源码。测试里让相邻两个版本共用一张表，每一步都互相读得懂对方写的数据。"},
+
+  {"id": "s31", "part": "p7-rollout", "action": "rollout_prepare", "highlight": "[data-testid=branch-percent]", "shape": "circle", "text": "这一段讲灰度发布。新的路由逻辑现在放给了百分之十的记录，同时打开了模拟流量。"},
+  {"id": "s32", "part": "p7-rollout", "action": "wait_samples", "highlight": "[data-testid=branch-samples]", "shape": "circle", "text": "看窗口里的样本数，已经够判断了。控制器每半秒看一次新版本最近十秒的错误率。"},
+  {"id": "s33", "part": "p7-rollout", "action": "noop", "highlight": "[data-testid=branch-fault]", "text": "现在故意让新版本有四成的请求出错。先框住这个按钮。"},
+  {"id": "s34", "part": "p7-rollout", "action": "click_rollback", "highlight": "[data-testid=branch-rollout-status]", "text": "点下去，一两秒以后状态变成了已回滚，放量回到零。没有人按任何按钮。"},
+  {"id": "s35", "part": "p7-rollout", "action": "noop", "highlight": "[data-testid=branch-rollback-reason]", "text": "看回滚原因，写着错误率多少、阈值多少、窗口多长、样本多少。错误率远没到四十，因为窗口里还有故障之前的成功请求；但只要越过阈值就回滚，不用等它涨上去。"},
+  {"id": "s36", "part": "p7-rollout", "action": "show_src:branch-src-rollback", "highlight": "[data-testid=branch-src-rollback]", "text": "判断写成了纯函数，所以几秒内回滚能在测试里用假时钟断言。把这个保护关掉，那个测试就会变红。"},
+
+  {"id": "s37", "part": "p8-observe", "action": "goto:/ops", "highlight": "[data-testid=alert-RolloutRolledBack]", "text": "这一段收尾。运维页上已经出现了一条告警，就是刚才的自动回滚。同样的条件也写成了普罗米修斯的告警规则。"},
+  {"id": "s38", "part": "p8-observe", "action": "goto:/learn/interview", "highlight": "[data-testid=q-0-0]", "text": "面试题标签页里有三十一题，按项目概述、设计取舍、故障、扩展、测试、系统设计和简历对应分组。"},
+  {"id": "s39", "part": "p8-observe", "action": "open_q", "highlight": "[data-testid=q-0-0] [data-testid=answer]", "text": "点开一题，先是一句话答案，再展开，再有追问和答法，都落到这个仓库的代码和实测上。"},
+  {"id": "s40", "part": "p8-observe", "action": "open_problem", "highlight": "[data-testid=problem-q01-lambda-dist-info-section-0]", "text": "日常问题里有十个，前六个是做这个项目时真踩到的。比如这一个，报错原文说找不到包元数据，不是找不到模块，这一句就把范围缩小了。"},
+  {"id": "s41", "part": "p8-observe", "action": "finish", "highlight": "[data-testid=tab-main]", "text": "总结一下。一份文档从收件到导出走了十步，分区保证同一条记录有序，迁移和灰度保证上线不停机、出错能退回去。每一步都能在页面上看到真实数据。"}
+]

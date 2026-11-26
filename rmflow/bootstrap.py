@@ -74,12 +74,14 @@ def lambda_zip() -> bytes:
             info.external_attr = 0o644 << 16
             z.writestr(info, path.read_bytes())
         put(ROOT / "lambdas/s3_intake/handler.py", "handler.py")
+        # @learn:lambda-zip-dist
         for dist_name in VENDORED:
             dist = importlib.metadata.distribution(dist_name)
             for f in sorted(dist.files or [], key=str):
                 if "__pycache__" in f.parts or f.suffix == ".pyc" or str(f).startswith(".."):
                     continue
                 put(Path(str(dist.locate_file(f))), str(f))
+        # @learn:end lambda-zip-dist
     return buf.getvalue()
 
 

@@ -21,6 +21,7 @@ public class TaskRepository {
     private final JdbcTemplate db;
     private final ReviewerPhase phase;
 
+    // @learn:repo-constructors
     @org.springframework.beans.factory.annotation.Autowired
     public TaskRepository(JdbcTemplate db, PhaseHolder phase) {
         this(db, phase.phase());
@@ -31,6 +32,7 @@ public class TaskRepository {
         this.db = db;
         this.phase = phase;
     }
+    // @learn:end repo-constructors
 
     public ReviewerPhase phase() {
         return phase;

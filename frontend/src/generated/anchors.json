@@ -9,10 +9,70 @@
     "start": 40,
     "end": 56
   },
+  "before-backfill": {
+    "path": "docs/problems/snippets/backfill_before.java",
+    "start": 4,
+    "end": 9
+  },
+  "before-contract": {
+    "path": "docs/problems/snippets/contract_before.sql",
+    "start": 3,
+    "end": 3
+  },
+  "before-datasource-url": {
+    "path": "docs/problems/snippets/datasource_before.yml",
+    "start": 3,
+    "end": 5
+  },
+  "before-idempotency": {
+    "path": "docs/problems/snippets/intake_before.py",
+    "start": 3,
+    "end": 10
+  },
+  "before-lambda-zip": {
+    "path": "docs/problems/snippets/lambda_zip_before.py",
+    "start": 3,
+    "end": 10
+  },
+  "before-modulo": {
+    "path": "docs/problems/snippets/modulo_before.py",
+    "start": 3,
+    "end": 5
+  },
+  "before-order": {
+    "path": "docs/problems/snippets/order_before.py",
+    "start": 3,
+    "end": 7
+  },
+  "before-repo-constructors": {
+    "path": "docs/problems/snippets/repo_before.java",
+    "start": 3,
+    "end": 10
+  },
+  "before-rollout": {
+    "path": "docs/problems/snippets/rollout_before.java",
+    "start": 3,
+    "end": 11
+  },
+  "before-stop-by-pid": {
+    "path": "docs/problems/snippets/stop_before.sh",
+    "start": 3,
+    "end": 7
+  },
   "claim": {
     "path": "routing-svc/src/main/java/dev/reviewmesh/review/ReviewService.java",
     "start": 51,
     "end": 63
+  },
+  "contract-guard": {
+    "path": "routing-svc/src/main/resources/db/migration/V3__contract_drop_reviewer_text.sql",
+    "start": 4,
+    "end": 12
+  },
+  "datasource-url": {
+    "path": "routing-svc/src/main/resources/application.yml",
+    "start": 14,
+    "end": 17
   },
   "decision-outbox": {
     "path": "routing-svc/src/main/java/dev/reviewmesh/review/DecisionOutbox.java",
@@ -56,13 +116,18 @@
   },
   "lambda-deploy": {
     "path": "rmflow/bootstrap.py",
-    "start": 108,
-    "end": 135
+    "start": 110,
+    "end": 137
   },
   "lambda-handler": {
     "path": "lambdas/s3_intake/handler.py",
     "start": 34,
     "end": 66
+  },
+  "lambda-zip-dist": {
+    "path": "rmflow/bootstrap.py",
+    "start": 78,
+    "end": 83
   },
   "ops-alerts": {
     "path": "rmflow/ops.py",
@@ -76,13 +141,13 @@
   },
   "phase-sql": {
     "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
-    "start": 40,
-    "end": 71
+    "start": 42,
+    "end": 73
   },
   "queue-query": {
     "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
-    "start": 123,
-    "end": 130
+    "start": 125,
+    "end": 132
   },
   "reconciler": {
     "path": "rmflow/pipeline.py",
@@ -93,6 +158,11 @@
     "path": "rmflow/locks.py",
     "start": 17,
     "end": 26
+  },
+  "repo-constructors": {
+    "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
+    "start": 25,
+    "end": 34
   },
   "ring-lookup": {
     "path": "rmflow/ring.py",
@@ -144,10 +214,15 @@
     "start": 16,
     "end": 27
   },
+  "stop-by-pid": {
+    "path": "scripts/stop.sh",
+    "start": 5,
+    "end": 15
+  },
   "task-upsert": {
     "path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java",
-    "start": 96,
-    "end": 111
+    "start": 98,
+    "end": 113
   },
   "test-expand-contract": {
     "path": "routing-svc/src/test/java/dev/reviewmesh/MigrationCompatTest.java",

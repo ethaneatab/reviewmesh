@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Stop only the processes demo.sh started, by the pids it wrote. Never by name.
 cd "$(dirname "$0")/.."
+# @learn:stop-by-pid
 for f in .runtime/*.pid; do
   [ -f "$f" ] || continue
   pid=$(cat "$f")
@@ -12,3 +13,4 @@ for f in .runtime/*.pid; do
   fi
   rm -f "$f"
 done
+# @learn:end stop-by-pid

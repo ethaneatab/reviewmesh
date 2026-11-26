@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "frontend/src/generated/anchors.json"
 SCAN = ["rmflow", "lambdas", "routing-svc/src", "frontend/src", "tests", "e2e", "scripts", "ops", "docs/problems/snippets"]
-EXT = {".py", ".java", ".ts", ".tsx", ".sql", ".mjs", ".yml"}
+EXT = {".py", ".java", ".ts", ".tsx", ".sql", ".mjs", ".yml", ".sh"}  # snippets also use .py/.java/.sql/.yml/.sh
 OPEN = re.compile(r"(?:#|//|--)\s*@learn:(?!end\b)([a-z0-9][a-z0-9-]*)\s*$")
 CLOSE = re.compile(r"(?:#|//|--)\s*@learn:end\s+([a-z0-9][a-z0-9-]*)\s*$")
 

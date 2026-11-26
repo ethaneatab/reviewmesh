@@ -1,5 +1,6 @@
 -- CONTRACT. Only after every instance runs NEW_ONLY and the backfill reports zero pending rows.
 -- The guard makes an early contract fail loudly instead of silently dropping reviewer names.
+-- @learn:contract-guard
 DO $$
 DECLARE pending bigint;
 BEGIN
@@ -9,4 +10,5 @@ BEGIN
         RAISE EXCEPTION 'contract blocked: % review_tasks rows are not backfilled (POST /v1/migration/backfill)', pending;
     END IF;
 END $$;
+-- @learn:end contract-guard
 ALTER TABLE review_tasks DROP COLUMN reviewer;

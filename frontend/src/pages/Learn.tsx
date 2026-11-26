@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { NavLink, Route, Routes, useSearchParams } from 'react-router-dom'
 import { HttpError, intake, learn, review } from '../api'
 import Json from '../components/Json'
 import SourceLink from '../components/SourceLink'
@@ -26,7 +26,9 @@ const KEY_VALUE: Record<string, (d: any) => string> = {
 }
 
 function MainLine() {
-  const [rid, setRid] = useState<string | null>(null)
+  // The run id lives in the URL (?run=rec_…), so leaving for a branch tab and coming back keeps it.
+  const [params, setParams] = useSearchParams()
+  const rid = params.get('run')
   const [run, setRun] = useState<Run | null>(null)
   const [open, setOpen] = useState<string | null>(null)
   const [err, setErr] = useState('')
@@ -52,7 +54,7 @@ function MainLine() {
     setRun(null)
     setOpen(null)
     const r = await learn<{ record_id: string }>('/runs', { method: 'POST' })
-    setRid(r.record_id)
+    setParams({ run: r.record_id })
   }
 
   async function act(what: 'claim' | 'approve') {

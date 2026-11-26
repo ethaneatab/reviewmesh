@@ -1,0 +1,171 @@
+[
+  {"id": "q01-lambda-dist-info", "title": "Lambda 一直起不来", "subtitle": "报错说找不到 scramp 的包元数据，记录卡在 STORED",
+   "lang": "python",
+   "code_from": {"path": "rmflow/bootstrap.py", "anchor": "lambda-zip-dist"},
+   "before_from": {"path": "docs/problems/snippets/lambda_zip_before.py", "anchor": "before-lambda-zip"},
+   "before_segments": [
+     {"lines": [], "text": "现象是这样的。提交了一份文档，时间线上只有提交这一步，Lambda 那一步一直不出现。"},
+     {"lines": [], "text": "去看 LocalStack 的日志，报错是导入失败，原文说没有找到 scramp 的包元数据。注意，它没说找不到模块，说的是找不到元数据。"},
+     {"lines": [1, 2], "text": "这是修复前的打包代码。它按模块名去找源码目录。"},
+     {"lines": [5, 6], "text": "然后只把目录里的点 py 文件拷进压缩包。代码在，可是描述这个包的那个目录没拷。"},
+     {"lines": [], "text": "而 scramp 在导入的时候，会用标准库去读自己的版本号，读的就是那个目录。所以一导入就失败。"}
+   ],
+   "segments": [
+     {"lines": [1, 2], "text": "修复后，不按模块找了，按发行包找。每个依赖拿到它的发行包对象。"},
+     {"lines": [3], "text": "发行包会列出它装下的所有文件，包括元数据目录。"},
+     {"lines": [4, 5], "text": "跳过缓存和编译产物，其余全部放进压缩包。"},
+     {"lines": [6], "text": "怎么证明修好了？同样的提交，时间线上 Lambda 那一步出现了。而那次失败期间的记录，也被二十秒一次的补偿任务救了回来，没有丢。"},
+     {"lines": [], "text": "面试可以这么讲：报错原文要读完，它说的是元数据，不是模块，这一下就把范围缩小到打包方式了。"}
+   ]},
+
+  {"id": "q02-backfill-erases-claims", "title": "回填差点抹掉新版本的认领", "subtitle": "迁移测试红了：待回填应该是零，实际是一",
+   "lang": "java",
+   "code_from": {"path": "routing-svc/src/main/java/dev/reviewmesh/migration/MigrationService.java", "anchor": "backfill"},
+   "before_from": {"path": "docs/problems/snippets/backfill_before.java", "anchor": "before-backfill"},
+   "before_segments": [
+     {"lines": [], "text": "现象：迁移的并行测试，在只写新列的版本上线以后，断言待回填的行数是零，结果是一。"},
+     {"lines": [], "text": "先假设是回填漏了一行。把那一行打出来，发现它是新版本刚认领的任务，新列有值，旧列是空的。这正是新版本该写出来的样子。"},
+     {"lines": [1, 2, 3], "text": "问题在判断条件。修复前，只要两列一个空一个不空，就算没对齐。新版本的正常数据被当成了脏数据。"},
+     {"lines": [5, 6], "text": "更危险的是这一句：旧列空、新列不空，就把新列清掉。要是在新版本上线后跑，所有新的认领都会被抹掉。"}
+   ],
+   "segments": [
+     {"lines": [8, 9, 10], "text": "修复后，回填只做一件事：旧列有值，而新列没有或者对不上，就补上。"},
+     {"lines": [13, 14, 15], "text": "清理那一句加了条件，只允许从双写阶段的版本里跑。那时还没有只写新列的实例，旧列空就真的是取消了认领。"},
+     {"lines": [16], "text": "返回还剩多少行。第三版迁移的守卫用的是同一个判断，剩下不是零就拒绝删列。"},
+     {"lines": [], "text": "面试一句话：迁移里最容易错的不是语句，而是每个阶段什么样的数据算正常。测试让新旧两个版本共用一张表，才把这个问题逼出来。"}
+   ]},
+
+  {"id": "q03-contract-before-backfill", "title": "删列跑早了会怎样", "subtitle": "演示库上真实撞到：迁移被守卫拦下并回滚",
+   "lang": "sql",
+   "code_from": {"path": "routing-svc/src/main/resources/db/migration/V3__contract_drop_reviewer_text.sql", "anchor": "contract-guard"},
+   "before_from": {"path": "docs/problems/snippets/contract_before.sql", "anchor": "before-contract"},
+   "before_segments": [
+     {"lines": [], "text": "现象：重启 Java 服务的时候用的是默认配置，迁移一路跑到了删列那一步，可是还没回填。"},
+     {"lines": [1], "text": "如果删列只是这一句，它会成功，然后旧列里的审核员名字就永远没了。没有任何报错。"}
+   ],
+   "segments": [
+     {"lines": [1, 2, 3], "text": "所以删列之前先跑一段检查。"},
+     {"lines": [4, 5], "text": "数一数：旧列有值、新列却没有对上的行。和回填用的是同一个条件。"},
+     {"lines": [6, 7], "text": "只要不是零，就抛异常。整个迁移在一个事务里，抛了就全部回滚，列还在。"},
+     {"lines": [], "text": "那次日志里写的是：删列被拦下，有两行没回填，迁移失败并且已回滚。"},
+     {"lines": [], "text": "然后按正确的顺序走：先双写，再回填到零，最后才删列。删完以后，老客户端读到的审核员名字还是对的。"},
+     {"lines": [], "text": "面试一句话：不可逆的一步，要让它在条件不满足时大声失败，而不是靠人记得顺序。"}
+   ]},
+
+  {"id": "q04-stale-jar-constructor", "title": "服务起不来：找不到默认构造函数", "subtitle": "加了一个测试用的构造函数，Spring 不知道用哪个",
+   "lang": "java",
+   "code_from": {"path": "routing-svc/src/main/java/dev/reviewmesh/review/TaskRepository.java", "anchor": "repo-constructors"},
+   "before_from": {"path": "docs/problems/snippets/repo_before.java", "anchor": "before-repo-constructors"},
+   "before_segments": [
+     {"lines": [], "text": "现象：Spring 上下文起不来，最底下的原因是任务仓库找不到默认构造函数。"},
+     {"lines": [1, 2, 3], "text": "原来只有这一个构造函数，Spring 自动用它注入。"},
+     {"lines": [5, 6, 7, 8], "text": "为了在测试里同时造一个旧版本、一个新版本，加了第二个构造函数。两个都是公开的，Spring 就不再自动挑了，退回去找无参的，当然找不到。"}
+   ],
+   "segments": [
+     {"lines": [1], "text": "修法是明确告诉 Spring 用哪一个。"},
+     {"lines": [2, 3, 4], "text": "生产代码走这一个，阶段从配置里来。"},
+     {"lines": [7, 8, 9, 10], "text": "测试走另一个，直接传阶段进来。"},
+     {"lines": [], "text": "后面还踩了一次同一个坑的变种：改完代码只跑了测试，没重新打包，重启用的还是旧的包，报的还是这个错。所以重启脚本之前一定先打包。"},
+     {"lines": [], "text": "面试一句话：错误栈要看最底下那一行原因；同一个错误再出现时，先确认跑的是不是新代码。"}
+   ]},
+
+  {"id": "q05-search-path", "title": "表明明建好了，SQL 却说语法错误", "subtitle": "坏语法异常，其实是表不在默认的模式里",
+   "lang": "yaml",
+   "code_from": {"path": "routing-svc/src/main/resources/application.yml", "anchor": "datasource-url"},
+   "before_from": {"path": "docs/problems/snippets/datasource_before.yml", "anchor": "before-datasource-url"},
+   "before_segments": [
+     {"lines": [], "text": "现象：Java 服务第一次启动，种子用户插入失败，报的是坏语法。可是那句插入在测试里明明是对的。"},
+     {"lines": [], "text": "假设一，语句写错了。拿到数据库里手工执行，报的其实是表不存在。"},
+     {"lines": [2], "text": "再看连接串：没有指定模式。迁移工具把表建在了 review 模式里，应用却在默认的 public 里找。"}
+   ],
+   "segments": [
+     {"lines": [2], "text": "修复后，连接串上带上当前模式，应用和迁移工具看的是同一个地方。"},
+     {"lines": [3, 4], "text": "用户名和密码照旧从环境变量读，默认值只是本地占位。"},
+     {"lines": [], "text": "怎么证明：服务正常起来，演示账号可以登录，拿到了令牌。"},
+     {"lines": [], "text": "面试一句话：驱动把很多错误都包装成语法错误，别信包装，去看数据库返回的原始错误。"}
+   ]},
+
+  {"id": "q06-stop-race", "title": "重启以后请求打到了正在退出的旧进程", "subtitle": "停服务只发了信号就走，新进程和旧进程抢端口",
+   "lang": "bash",
+   "code_from": {"path": "scripts/stop.sh", "anchor": "stop-by-pid"},
+   "before_from": {"path": "docs/problems/snippets/stop_before.sh", "anchor": "before-stop-by-pid"},
+   "before_segments": [
+     {"lines": [], "text": "现象：重启接口服务以后，健康检查说好了，紧接着提交请求却连接被拒绝。"},
+     {"lines": [], "text": "看日志，新进程的日志文件里混着旧进程的退出信息。说明健康检查打到的是还没退出的旧进程。"},
+     {"lines": [3, 4], "text": "修复前，停服务只是发一个信号就去删进程号文件，根本不等它退出。"}
+   ],
+   "segments": [
+     {"lines": [1, 3], "text": "修复后，还是只按自己记下的进程号停，绝不按名字去杀，免得误伤同一台机器上别的项目。"},
+     {"lines": [5, 6], "text": "发完信号，每零点二秒看一次它还在不在，最多等十秒。"},
+     {"lines": [7], "text": "十秒还没走，才强制结束。"},
+     {"lines": [], "text": "怎么证明：之后每次重启，都是旧进程确认退出了才起新的，再没出现过连接被拒绝。"},
+     {"lines": [], "text": "面试一句话：停止是一个过程，不是一个动作；脚本要等到状态真的变了再往下走。"}
+   ]},
+
+  {"id": "q07-retry-duplicates", "title": "客户端重试，一份文档建了八条记录", "subtitle": "先查再插有竞态：八个并发重试全都查到没有",
+   "lang": "python",
+   "code_from": {"path": "rmflow/intake.py", "anchor": "idempotency-guard"},
+   "before_from": {"path": "docs/problems/snippets/intake_before.py", "anchor": "before-idempotency"},
+   "before_segments": [
+     {"lines": [], "text": "这是一个典型的生产事故，也是这个仓库的失败对照。把幂等保护关掉，八个并发重试，数据库里出现了八条记录。"},
+     {"lines": [2, 3, 4], "text": "常见的第一版是先查这个键有没有用过，有就返回旧结果。"},
+     {"lines": [6, 7, 8], "text": "没有就建记录、再记下这个键。问题是八个请求同时查，都说没有，然后都建了。"}
+   ],
+   "segments": [
+     {"lines": [6, 7, 8, 9, 10], "text": "修复后反过来：先插入这个键，靠主键冲突来挡。插进去的那一个才有资格干活。"},
+     {"lines": [11, 12], "text": "插进去了，就在同一个事务里建记录、写时间线、存下响应，一起提交。"},
+     {"lines": [14, 15, 16, 17], "text": "没插进去，说明别人先到了。加锁读，会一直等到对方提交，然后拿到对方存的响应。"},
+     {"lines": [19, 20], "text": "同一个键、请求体却不一样，这是客户端的错，直接拒绝。"},
+     {"lines": [21], "text": "否则原样返回第一次的结果，并标明这是重放。测试里八个请求，七个重放，一个新建，数据库里只有一条。"},
+     {"lines": [], "text": "面试一句话：幂等要靠数据库的唯一约束来保证，不能靠先查后写。"}
+   ]},
+
+  {"id": "q08-modulo-reshuffle", "title": "扩容一台 worker，七成五的记录换了主人", "subtitle": "取模分区在扩容时几乎全部重排",
+   "lang": "python",
+   "code_from": {"path": "rmflow/ring.py", "anchor": "ring-lookup"},
+   "before_from": {"path": "docs/problems/snippets/modulo_before.py", "anchor": "before-modulo"},
+   "before_segments": [
+     {"lines": [], "text": "失败对照：把一致性哈希换成取模，从三台扩到四台，测试测出百分之七十五的记录换了主人，断言变红。"},
+     {"lines": [2, 3], "text": "取模的写法就这两行。台数一变，几乎每个余数都变，所有权交接遍地开花，乱序和重复的机会也跟着变多。"}
+   ],
+   "segments": [
+     {"lines": [4, 7], "text": "一致性哈希给每台 worker 在环上放一百二十八个虚拟节点。"},
+     {"lines": [8, 9], "text": "把这些点按哈希值排好序。"},
+     {"lines": [11, 12, 13], "text": "一个记录落在环上某一点，顺时针找第一个虚拟节点，过了顶就绕回开头。"},
+     {"lines": [15, 18], "text": "那个虚拟节点属于谁，记录就归谁。"},
+     {"lines": [], "text": "新来的 worker 只接管它那些点前面的一小段弧。实测三台到四台搬走百分之二十八，而且全部搬给了新来的那台。"},
+     {"lines": [], "text": "面试一句话：分区方案要看扩缩容时搬多少数据，搬得越少，交接窗口里出错的机会越少。"}
+   ]},
+
+  {"id": "q09-out-of-order", "title": "第五版比第一版先处理完", "subtitle": "队列乱序投递，没有顺序闸门就按到达顺序执行",
+   "lang": "python",
+   "code_from": {"path": "rmflow/worker.py", "anchor": "order-gate"},
+   "before_from": {"path": "docs/problems/snippets/order_before.py", "anchor": "before-order"},
+   "before_segments": [
+     {"lines": [], "text": "失败对照：把顺序闸门关掉，测试按五、二、六、一、三、四的顺序投递，实际执行顺序也是五、二、六、一。断言变红。"},
+     {"lines": [3, 4], "text": "没有闸门的写法：队列给什么就处理什么，处理完把版本号记上。标准队列本来就不保证顺序，还会重复投递。"}
+   ],
+   "segments": [
+     {"lines": [3, 4, 5, 7], "text": "修复后，先读这条记录已经处理到第几版。"},
+     {"lines": [10, 11], "text": "收到的版本不大于它，说明做过了，丢掉。补偿任务造成的重复也在这里被挡住。"},
+     {"lines": [12], "text": "正好是下一版才处理；更大就放回队列，等前面那一版先到。"},
+     {"lines": [], "text": "再加上每条记录一把锁和递增的令牌，扩容交接时新旧两个主人也不会同时处理同一条记录。测试里同一时刻在里面的最多一个。"},
+     {"lines": [], "text": "面试一句话：不要相信队列的顺序，要相信数据里的版本号。"}
+   ]},
+
+  {"id": "q10-no-auto-rollback", "title": "新路由逻辑出错，没人发现就一直放量", "subtitle": "控制器只会往前走，回退要靠人",
+   "lang": "java",
+   "code_from": {"path": "routing-svc/src/main/java/dev/reviewmesh/rollout/RolloutPolicy.java", "anchor": "rollback-decision"},
+   "before_from": {"path": "docs/problems/snippets/rollout_before.java", "anchor": "before-rollout"},
+   "before_segments": [
+     {"lines": [], "text": "失败对照：把自动回滚关掉，测试在第三秒注入三成故障，等到最后放量比例也没回到零，断言说从没回滚过。"},
+     {"lines": [5, 6, 7], "text": "只会前进的控制器长这样：时间到了就升下一档，根本不看错误率。"}
+   ],
+   "segments": [
+     {"lines": [5], "text": "修复后，先看样本够不够。太少的样本，错误率没有意义。"},
+     {"lines": [6, 7, 8, 9], "text": "样本够了，错误率又超过阈值，就回到零，原因里写清楚错误率、阈值、窗口和样本数。"},
+     {"lines": [11, 12, 13, 14], "text": "只有健康地待满一段时间，才升到下一档。"},
+     {"lines": [], "text": "实测：假时钟下故障后零点五秒回滚；在跑着的系统上注入四成故障，一点七秒回滚。"},
+     {"lines": [], "text": "面试一句话：灰度的价值在于能自动退回去；把判断写成纯函数，几秒内回滚才能在测试里断言。"}
+   ]}
+]

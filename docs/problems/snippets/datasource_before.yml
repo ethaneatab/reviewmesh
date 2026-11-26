@@ -1,0 +1,6 @@
+# Before q05: no schema on the JDBC URL. Flyway created the tables in "review", the app looked in "public".
+# @learn:before-datasource-url
+  datasource:
+    url: ${RM_JDBC_URL:jdbc:postgresql://127.0.0.1:54390/reviewmesh}
+    username: reviewmesh
+# @learn:end before-datasource-url
