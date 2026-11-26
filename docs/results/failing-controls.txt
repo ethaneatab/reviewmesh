@@ -1,0 +1,41 @@
+### tests/test_step01_idempotency.py::test_concurrent_retries_create_exactly_one_record — protection OFF (no_idempotency)
+E       AssertionError: 8 records for one idempotency key
+E       assert 8 == 1
+1 failed, 1 warning in 0.46s
+
+### tests/test_step01_idempotency.py::test_concurrent_retries_create_exactly_one_record — protection ON
+1 passed, 1 warning in 0.38s
+
+### tests/test_step03_ring.py::test_scale_out_moves_about_one_over_n_plus_one — protection OFF (modulo_hash)
+E       AssertionError: moved 75.38% of keys, expected about 25%
+E       assert 0.75375 <= 0.3
+1 failed in 0.07s
+
+### tests/test_step03_ring.py::test_scale_out_moves_about_one_over_n_plus_one — protection ON
+1 passed in 0.05s
+
+### tests/test_step03_order_and_lock.py::test_steps_apply_in_seq_order_even_when_delivered_shuffled — protection OFF (no_order_gate)
+E       assert [5, 2, 6, 1, 3, 4, ...] == [1, 2, 3, 4, 5, 6]
+E         
+E         At index 0 diff: 5 != 1
+E         Left contains one more item: 2
+
+### tests/test_step03_order_and_lock.py::test_steps_apply_in_seq_order_even_when_delivered_shuffled — protection ON
+1 passed in 0.24s
+
+### tests/test_step03_order_and_lock.py::test_two_owners_during_a_handoff_never_overlap_on_one_record — protection OFF (no_lock)
+E       assert 2 == 1
+1 failed in 0.60s
+
+### tests/test_step03_order_and_lock.py::test_two_owners_during_a_handoff_never_overlap_on_one_record — protection ON
+1 passed in 0.66s
+
+### RolloutPolicyTest.errorRegressionRollsBackToZeroWithinFiveSeconds — protection OFF (no_rollback)
+fault at 3000 ms, never rolled back
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.060 s <<< FAILURE! -- in dev.reviewmesh.RolloutPolicyTest
+[never rolled back] 
+
+### RolloutPolicyTest.errorRegressionRollsBackToZeroWithinFiveSeconds — protection ON
+fault at 3000 ms, rolled back at 3500 ms (500 ms later)
+BUILD SUCCESS
+

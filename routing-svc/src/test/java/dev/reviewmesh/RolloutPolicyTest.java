@@ -48,7 +48,8 @@ class RolloutPolicyTest {
         List<Integer> trace = run(0.30, faultAt, 20_000, 10);
         int firstZero = trace.indexOf(0);
         long rolledBackAt = firstZero * 500L;
-        System.out.printf("fault at %d ms, rolled back at %d ms (%d ms later)%n", faultAt, rolledBackAt, rolledBackAt - faultAt);
+        System.out.println(firstZero < 0 ? "fault at " + faultAt + " ms, never rolled back"
+                : String.format("fault at %d ms, rolled back at %d ms (%d ms later)", faultAt, rolledBackAt, rolledBackAt - faultAt));
         assertThat(firstZero).as("never rolled back").isGreaterThanOrEqualTo(0);
         assertThat(rolledBackAt - faultAt).isLessThanOrEqualTo(ROLLBACK_DEADLINE_MS);
         assertThat(trace.get(trace.size() - 1)).isZero();

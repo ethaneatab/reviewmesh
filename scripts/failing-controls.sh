@@ -13,9 +13,9 @@ py_case() {  # py_case <switch> <test node>
   local sw=$1 node=$2
   for mode in off on; do
     if [ $mode = off ]; then env=RM_LAB_SABOTAGE=$sw; label="protection OFF ($sw)"; else env=RM_LAB_SABOTAGE=; label="protection ON"; fi
-    res=$(env $env .venv/bin/python -m pytest "$node" -q -p no:cacheprovider 2>&1)
+    res=$(env $env .venv/bin/python -m pytest "$node" -p no:cacheprovider 2>&1)
     rc=$?
-    { echo "### $node — $label"; echo "$res" | grep -E "^E  |AssertionError|passed|failed" | head -4; echo; } >> "$OUT"
+    { echo "### $node — $label"; echo "$res" | grep -E "^E  |[0-9]+ (passed|failed)" | head -4; echo; } >> "$OUT"
     if [ $mode = off ] && [ $rc -eq 0 ]; then echo "!! $sw: test still passes with the protection off"; status=1; fi
     if [ $mode = on ] && [ $rc -ne 0 ]; then echo "!! $sw: test fails with the protection on"; status=1; fi
   done

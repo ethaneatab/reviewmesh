@@ -94,6 +94,7 @@ public class RolloutService {
     @Transactional
     public void start(String who) {
         int pct = ((Number) state().get("percent")).intValue();
+        window.clear();
         db.update("UPDATE rollout_state SET percent = 1, status = 'RAMPING', stage_since = now(), updated_at = now() WHERE flag = ?", FLAG);
         event("START", pct, 1, "started by " + who, null, null);
         invalidate();
@@ -120,6 +121,7 @@ public class RolloutService {
     @Transactional
     public void reset(String who) {
         int pct = ((Number) state().get("percent")).intValue();
+        window.clear();
         db.update("UPDATE rollout_state SET percent = 0, status = 'IDLE', fault_rate = 0, stage_since = now(), updated_at = now() WHERE flag = ?", FLAG);
         event("RESET", pct, 0, "reset by " + who, null, null);
         invalidate();

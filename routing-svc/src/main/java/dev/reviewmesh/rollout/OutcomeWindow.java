@@ -31,6 +31,11 @@ public class OutcomeWindow {
         }
     }
 
+    /** A new rollout attempt starts with an empty window: the last attempt's errors must not count. */
+    public synchronized void clear() {
+        items.clear();
+    }
+
     public synchronized Stats stats(long nowMs, long windowMs, String engine) {
         int n = 0;
         int err = 0;
