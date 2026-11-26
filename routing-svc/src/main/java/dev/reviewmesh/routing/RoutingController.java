@@ -22,6 +22,9 @@ public class RoutingController {
     @PostMapping("/v1/routing/decisions")
     public DecisionResponse decide(@RequestBody DecisionRequest req, HttpServletRequest http) {
         Principal.of(http).require("service", "ops");
+        if ("true".equalsIgnoreCase(http.getHeader("X-Dry-Run"))) {
+            return routing.dryRun(req);
+        }
         MDC.put("record_id", req.recordId());
         MDC.put("trace_id", String.valueOf(req.traceId()));
         try {

@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Queue from './pages/Queue'
 import RecordPage from './pages/Record'
 import Ring from './pages/Ring'
+import Rollout from './pages/Rollout'
 
 export default function App() {
   const s = session()
@@ -15,6 +16,7 @@ export default function App() {
         <nav>
           <NavLink to="/queue">审核队列</NavLink>
           <NavLink to="/ring">哈希环</NavLink>
+          <NavLink to="/rollout">发布控制台</NavLink>
         </nav>
         <div className="who">
           {s ? (
@@ -34,6 +36,7 @@ export default function App() {
           <Route path="/queue" element={<Queue />} />
           <Route path="/records/:id" element={<RecordPage />} />
           <Route path="/ring" element={<Ring />} />
+          <Route path="/rollout" element={<Rollout />} />
         </Routes>
       </main>
     </>

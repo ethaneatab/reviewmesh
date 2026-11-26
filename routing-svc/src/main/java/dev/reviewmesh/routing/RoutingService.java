@@ -1,6 +1,7 @@
 package dev.reviewmesh.routing;
 
 import dev.reviewmesh.audit.AuditRepository;
+import dev.reviewmesh.rollout.RolloutService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,12 +16,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoutingService {
     private final JdbcTemplate db;
     private final RuleEngineV1 v1;
+    private final RuleEngineV2 v2;
     private final AuditRepository audit;
+    private final RolloutService rollout;
 
-    public RoutingService(JdbcTemplate db, RuleEngineV1 v1, AuditRepository audit) {
+    public RoutingService(JdbcTemplate db, RuleEngineV1 v1, RuleEngineV2 v2, AuditRepository audit, RolloutService rollout) {
         this.db = db;
         this.v1 = v1;
+        this.v2 = v2;
         this.audit = audit;
+        this.rollout = rollout;
     }
 
     /** One decision per (record, seq): a client retry gets the same answer back. */
@@ -33,8 +38,34 @@ public class RoutingService {
         }
     }
 
-    protected Chosen choose(DecisionRequest req) {
-        return new Chosen("v1", v1.route(req));
+    // @learn:flag-choose
+    /** The flag decides per record; a v2 failure is counted and the request falls back to v1. */
+    Chosen choose(DecisionRequest req) {
+        if (!rollout.useV2(req.recordId())) {
+            rollout.record("v1", true);
+            return new Chosen("v1", v1.route(req));
+        }
+        try {
+            if (rollout.shouldFail()) {
+                throw new IllegalStateException("injected fault");
+            }
+            Route r = v2.route(req);
+            rollout.record("v2", true);
+            return new Chosen("v2", r);
+        } catch (RuntimeException e) {
+            rollout.record("v2", false);
+            Route r = v1.route(req);
+            return new Chosen("v1", new Route(r.queue(), r.priority(), "v2 failed (" + e.getMessage() + "), used v1: " + r.reason()));
+        }
+    }
+    // @learn:end flag-choose
+
+    /** Synthetic traffic for rollout drills: the real decision path, nothing persisted. */
+    public DecisionResponse dryRun(DecisionRequest req) {
+        req.check();
+        Chosen c = choose(req);
+        return new DecisionResponse("dry-run", req.recordId(), req.seq(), c.route().queue(), c.route().priority(), c.engine(),
+                c.route().reason());
     }
 
     public record Chosen(String engine, Route route) {}

@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 import httpx
 
-from . import auth, cache, db, exporter, intake, logs, membership, ring
+from . import auth, cache, db, exporter, intake, logs, membership, ring, traffic
 from .config import ROOT, settings
 
 log = logs.setup("intake")
@@ -176,3 +176,28 @@ def scale_out(worker: str = "w4", _: Any = Depends(auth.ops_or_learn)) -> dict[s
 @app.post("/v1/ring/scale-in")
 def scale_in(worker: str = "w4", _: Any = Depends(auth.ops_or_learn)) -> dict[str, Any]:
     return _scale(worker, "/leave")
+
+
+# ---- rollout drill: synthetic traffic, and operator actions proxied for the learn page ---------
+
+@app.post("/v1/rollout/traffic")
+def rollout_traffic(seconds: float = 30, rps: int = 100, _: Any = Depends(auth.ops_or_learn)) -> dict[str, Any]:
+    return traffic.start(min(seconds, 120), min(rps, 300))
+
+
+@app.get("/v1/rollout/traffic")
+def rollout_traffic_status() -> dict[str, Any]:
+    return traffic.status()
+
+
+@app.post("/v1/rollout/{action}")
+def rollout_action(action: Literal["start", "advance", "reset", "fault"], rate: float = 0.0,
+                   claims: dict[str, Any] = Depends(auth.ops_or_learn)) -> Any:
+    """Forwards an operator action to the Java rollout controller with an ops token."""
+    token = auth.mint(claims["sub"], "ops", 60)
+    params = {"rate": rate} if action == "fault" else None
+    r = httpx.post(f"{settings().routing_url}/v1/rollout/{action}", params=params, timeout=5,
+                   headers={"Authorization": f"Bearer {token}"})
+    if r.status_code >= 400:
+        raise HTTPException(r.status_code, r.text)
+    return r.json()
