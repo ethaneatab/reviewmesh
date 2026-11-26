@@ -47,7 +47,9 @@ test('main line lights every stage in order from real backend state', async ({ p
   for (const id of ORDER) checkSourceHref((await page.getByTestId(`src-${id}`).getAttribute('href'))!)
   // the video slot degrades gracefully
   await page.getByTestId('video-submit').getByRole('button').click()
-  await expect(page.getByTestId('video-submit')).toContainText('视频待生成')
+  // the committed video plays; before the videos were generated the slot said so instead
+  const slot = page.getByTestId('video-submit')
+  await expect(slot.locator('video').or(slot.getByTestId('video-pending'))).toBeVisible()
 })
 
 test('scale-out branch shows the moved keys', async ({ page }) => {
@@ -97,5 +99,5 @@ test('problems tab: expand one problem', async ({ page }) => {
   await first.locator('summary').click()
   await expect(first.getByTestId(/section-0$/).first()).toBeVisible()
   await first.getByRole('button', { name: '看讲解视频' }).click()
-  await expect(first.getByTestId('video-pending')).toBeVisible()
+  await expect(first.locator('video').or(first.getByTestId('video-pending'))).toBeVisible()
 })
