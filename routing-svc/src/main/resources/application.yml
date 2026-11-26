@@ -19,7 +19,7 @@ spring:
   flyway:
     schemas: review
     create-schemas: true
-    # Which schema version to migrate to. The contract step is applied on purpose, not by default.
+    # Schema version to migrate to (expand/contract drills use 2, then 3). V3 refuses to run before the backfill.
     target: ${RM_FLYWAY_TARGET:latest}
 management:
   endpoints:
@@ -27,6 +27,9 @@ management:
       exposure:
         include: health,prometheus,info
 reviewmesh:
+  migration:
+    # LEGACY | DUAL_WRITE | READ_NEW | NEW_ONLY (see migration/ReviewerPhase.java)
+    phase: ${RM_MIGRATION_PHASE:NEW_ONLY}
   jwt-secret: ${RM_JWT_SECRET:dev-only-jwt-signing-key-not-for-production-use}
   seed-demo: ${RM_SEED_DEMO:0}
   sqs:

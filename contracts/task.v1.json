@@ -1,0 +1,19 @@
+{
+  "frozen_at": "step-05 (before the reviewer column migration). Old reviewer clients read exactly these fields.",
+  "response": {
+    "id": 5,
+    "record_id": "rec_7cc86543109548d1",
+    "seq": 1,
+    "title": "E2E invoice 1795635841139",
+    "doc_type": "invoice",
+    "s3_key": "inbox/rec_7cc86543109548d1/v1/e2e.pdf",
+    "queue": "finance",
+    "priority": 3,
+    "status": "APPROVED",
+    "reviewer": "rita",
+    "decision_reason": "totals match the purchase order",
+    "trace_id": "6bbdff7cd9554f719657b6329e759788",
+    "created_at": "2026-11-25T19:44:01.87545Z",
+    "updated_at": "2026-11-25T19:44:04.737946Z"
+  }
+}

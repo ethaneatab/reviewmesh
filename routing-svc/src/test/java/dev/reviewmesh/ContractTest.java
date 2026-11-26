@@ -67,6 +67,21 @@ class ContractTest {
     }
 
     @Test
+    void taskJsonStillServesTheFieldsOldClientsRead() throws Exception {
+        HandoffMessage m = json.treeToValue(TestSupport.contract("handoff.v1.json").get("message"), HandoffMessage.class);
+        review.takeHandoff(m, "m1");
+        long id = db.queryForObject("SELECT id FROM review_tasks", Long.class);
+        review.claim(id, "rita", "reviewer");
+        String body = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/v1/tasks/" + id)
+                        .header("Authorization", "Bearer " + jwt.issue("rita", "reviewer", 60)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        JsonNode actual = json.readTree(body);
+        assertThat(TestSupport.breakingChanges(TestSupport.contract("task.v1.json").get("response"), actual, "$")).isEmpty();
+        assertThat(actual.get("reviewer").asText()).isEqualTo("rita");
+        assertThat(actual.get("reviewer_id").isNumber()).isTrue();
+    }
+
+    @Test
     void routingRequiresAServiceToken() throws Exception {
         JsonNode snap = TestSupport.contract("routing-decision.v1.json");
         mvc.perform(post("/v1/routing/decisions").contentType(MediaType.APPLICATION_JSON).content(snap.get("request").toString()))
